@@ -1,4 +1,6 @@
 IICL Blog Management Application (.NET 8, Single Project) :
+
+
 Overview
 This project is a single-project ASP.NET Core (.NET 8) application that I developed as part of a technical challenge.
 It combines both backend and frontend functionalities within a single solution — designed for simplicity, scalability, and clean architecture.
@@ -7,7 +9,7 @@ It implements four levels of functionality:
 •	Level 2: Frontend Admin UI
 •	Level 3: Cloud Deployment (Azure-ready)
 •	Level 4: Security Enhancements
-________________________________________
+
 Tech Stack
 •	ASP.NET Core 8 (MVC + API)
 •	Entity Framework Core
@@ -16,7 +18,7 @@ Tech Stack
 •	FluentValidation
 •	Swagger / OpenAPI
 •	Security Middleware: Error handling, Rate limiting, HTTPS, CORS, Security headers
-________________________________________
+
 
 
 Project Structure
@@ -30,7 +32,7 @@ Blog.Api/
  ├── deploy-azure.ps1 (ZipDeploy helper script)
  ├── .github/workflows/dotnet.yml (CI build)
  └── README.md
-________________________________________
+
 Level 1 — Backend API (Blog CRUD)
 I built a BlogPost entity that supports full CRUD operations via REST API.
 Endpoints:
@@ -40,7 +42,7 @@ GET     /api/blogs/{id}
 PUT     /api/blogs/{id}
 DELETE  /api/blogs/{id}
 All endpoints are validated using FluentValidation, and structured error handling middleware ensures consistent JSON responses.
-________________________________________
+
 Level 2 — Frontend Admin UI
 I implemented an integrated MVC-based Admin UI to manage blog posts:
 •	List view with search and pagination
@@ -48,7 +50,7 @@ I implemented an integrated MVC-based Admin UI to manage blog posts:
 •	Delete confirmation
 •	Details view
 This frontend is served from the same project — no separate frontend framework needed.
-________________________________________
+
 
 
 Level 3 — Deployment (Azure App Service)
@@ -57,12 +59,12 @@ Option A: SQL Authentication
 Used a connection string through Azure portal settings.
 Option B: Managed Identity (Passwordless)
 Configured Azure Managed Identity and added required roles in SQL Database for secure passwordless connection.
-________________________________________
+
 Troubleshooting
 During deployment, I faced issues with Azure connection timeout (SQL connection).
 I confirmed this was a temporary Azure region issue and verified it through the deployment logs.
 Once services are fully operational, I can redeploy and share a working URL.
-________________________________________
+
 Level 4 — Security Enhancements
 •	Input validation using FluentValidation
 •	Global exception middleware for structured error output
@@ -70,7 +72,7 @@ Level 4 — Security Enhancements
 •	HTTPS redirection in production
 •	Secure headers (X-Content-Type-Options, X-Frame-Options, etc.)
 •	Configurable CORS policy for restricted environments
-________________________________________
+
 How to Run Locally
 Requirements:
 •	.NET 8 SDK
@@ -81,7 +83,7 @@ dotnet run --project .\Blog.Api
 If the port differs, use the one displayed in the console.
 To reset local DB:
 Delete blog.db in Blog.Api folder and rerun the app.
-________________________________________
+
 
 Deployment Note
 I successfully deployed this project on Microsoft Azure,
@@ -91,17 +93,17 @@ However, the app was fully published and verified from the Kudu deployment panel
 Below are the deployment screenshots captured from Azure:
 (If images don’t load in GitHub preview, they are also available in the /docs/screenshots/ folder.)
 Once Azure resolves the service-level issue, I can provide the live URL immediately.
-________________________________________
+
 Azure URLs (for reference)
 •	Web App: https://iicl-blog-bgfbehb8grdcb0ax.canadacentral-01.azurewebsites.net
 •	Admin UI: https://iicl-blog-bgfbehb8grdcb0ax.canadacentral-01.azurewebsites.net/Posts/Index
 •	Swagger: https://iicl-blog-bgfbehb8grdcb0ax.canadacentral-01.azurewebsites.net/swagger
-________________________________________
+
 CI/CD (GitHub Actions)
 •	Workflow configured in .github/workflows/dotnet.yml
 •	Builds automatically on every push to main
 •	Publishes compiled artifacts for testing
-________________________________________
+
 Personal Contribution Summary
 I independently designed, developed, and deployed this entire project:
 •	Set up the full-stack architecture (API + MVC UI)
@@ -110,8 +112,8 @@ I independently designed, developed, and deployed this entire project:
 •	Configured CI/CD and security features
 •	Troubleshot Azure connectivity and deployment logs manually
 This project reflects my hands-on experience with .NET 8, EF Core, Azure, and secure API development — directly aligned with full-stack .NET developer roles.
-________________________________________
+
 Contact Author: Abhinav Vuddanti
 📧 abhin6289@gmail.com
 💻 The repository includes full setup instructions and deployment steps for reviewers.
-Note : Attached images of working web app you can find them in screenshots folders for your refrence 
+

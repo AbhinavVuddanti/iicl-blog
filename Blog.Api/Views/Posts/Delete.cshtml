@@ -1,0 +1,21 @@
+@model Blog.Api.Dtos.BlogPostDto
+@{
+    ViewData["Title"] = "Delete Post";
+}
+<div class="container mt-4">
+    <h2>Delete Post</h2>
+    <div class="alert alert-warning">Are you sure you want to delete this post?</div>
+    <dl class="row">
+        <dt class="col-sm-2">Title</dt>
+        <dd class="col-sm-10">@Model.Title</dd>
+        <dt class="col-sm-2">Author</dt>
+        <dd class="col-sm-10">@Model.Author</dd>
+        <dt class="col-sm-2">Created</dt>
+        <dd class="col-sm-10">@Model.CreatedAt.ToLocalTime().ToString("f")</dd>
+    </dl>
+    <form asp-action="Delete" method="post">
+        <input type="hidden" name="id" value="@Model.Id" />
+        <a class="btn btn-secondary" href="@Url.Action("Index")">Cancel</a>
+        <button type="submit" class="btn btn-danger">Delete</button>
+    </form>
+</div>

@@ -1,0 +1,18 @@
+@model Blog.Api.Dtos.BlogPostDto
+@{
+    ViewData["Title"] = "Post Details";
+}
+<div class="container mt-4">
+    <h2>@Model.Title</h2>
+    <p class="text-muted">By @Model.Author • @Model.CreatedAt.ToLocalTime().ToString("f")</p>
+    <hr />
+    <div>
+        <pre style="white-space: pre-wrap; font-family: inherit;">@Model.Content</pre>
+    </div>
+    <hr />
+    <div class="d-flex gap-2">
+        <a class="btn btn-secondary" href="@Url.Action("Index")">Back</a>
+        <a class="btn btn-primary" href="@Url.Action("Edit", new { id = Model.Id })">Edit</a>
+        <a class="btn btn-danger" href="@Url.Action("Delete", new { id = Model.Id })">Delete</a>
+    </div>
+</div>

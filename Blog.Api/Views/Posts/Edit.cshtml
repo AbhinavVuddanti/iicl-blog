@@ -1,0 +1,29 @@
+@model Blog.Api.Dtos.BlogPostUpdateDto
+@{
+    ViewData["Title"] = "Edit Post";
+}
+<div class="container mt-4">
+    <h2>Edit Post</h2>
+    <form asp-action="Edit" method="post">
+        <input type="hidden" name="id" value="@ViewBag.Id" />
+        <div class="mb-3">
+            <label class="form-label">Title</label>
+            <input asp-for="Title" class="form-control" />
+            <span asp-validation-for="Title" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Author</label>
+            <input asp-for="Author" class="form-control" />
+            <span asp-validation-for="Author" class="text-danger"></span>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Content</label>
+            <textarea asp-for="Content" rows="8" class="form-control"></textarea>
+            <span asp-validation-for="Content" class="text-danger"></span>
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-secondary" href="@Url.Action("Index")">Cancel</a>
+            <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+    </form>
+</div>

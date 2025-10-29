@@ -1,89 +1,277 @@
-# IICL Blog Management Application (.NET 8, Single Project)
 
-Single-project ASP.NET Core app with:
-- REST API (Level 1)
-- MVC Admin UI (Level 2)
-- Production-ready deployment path (Level 3)
-- Security middleware: validation, rate limiting, CORS, HTTPS, security headers (Level 4)
 
-## Tech
-- ASP.NET Core (.NET 8)
-- EF Core (SQLite for Dev, SQL Server for Prod)
-- FluentValidation
-- Polly (Admin-only previously; now unified in a single app)
+Blog Management Application (.NET 8)
 
-## Run locally
-- Requirements: .NET 8 SDK
-- Start
-  - `dotnet run --project .\Blog.Api`
-  - App: http://localhost:5091
-  - Swagger: http://localhost:5091/swagger
-- DB: SQLite file `blog.db` auto-created in Blog.Api folder.
+Project Overview
 
-## API Endpoints (summary)
-- POST /api/blogs
-- GET /api/blogs?page=1&pageSize=10&author=&from=&to=&search=&sortBy=&sortDir=
-- GET /api/blogs/{id}
-- PUT /api/blogs/{id}
-- DELETE /api/blogs/{id}
+A single-project ASP.NET Core (.NET 8)  application that combines both:
 
-## Security
-- Input validation (FluentValidation)
-- Error handling middleware (JSON payloads)
-- Fixed-window rate limiting (20 req/sec)
-- HTTPS redirection (use HTTPS in production)
-- Security headers (CSP, X-Frame-Options, X-Content-Type-Options, etc.)
-- CORS: permissive in Development; restrict in Production
+Backend REST API  (CRUD for blog posts)
+MVC Admin UI (list, view, create, edit, delete)
 
-## Deployment to Azure App Service (Option A: Publish Profile)
-We will deploy the single project (Blog.Api) to Azure App Service. For production, use Azure SQL.
+Database Configuration
 
-### 1) Azure resources
-- Create App Service (Linux) runtime: .NET 8 LTS
-- Create Azure SQL server + database (e.g., `iiclblogdb`)
-- In Web App > Configuration:
-  - Add ConnectionStrings: `DefaultConnection = Server=tcp:<server>.database.windows.net,1433;Initial Catalog=<db>;Persist Security Info=False;User ID=<user>;Password=<password>;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;`
-  - Add `ASPNETCORE_ENVIRONMENT = Production`
-  - Optional: add `WEBSITE_RUN_FROM_PACKAGE = 1` (recommended for zip deploy)
+Development: SQLite file (`blog.db`)
+Production: Azure SQL (supports SQL Authentication or Managed Identity)
 
-### 2) Production configuration in code
-- `Blog.Api/appsettings.Production.json` (placeholders provided). App reads `DefaultConnection` in Production and uses SQL Server.
-- EF Core uses `Database.Migrate()` in Production to apply migrations automatically on startup.
+Goal Alignment
 
-### 3) Create EF Core migration (one-time)
-- Install tools if needed: `dotnet tool install --global dotnet-ef`
-- From solution root:
-  - `dotnet ef migrations add InitialCreate --project .\Blog.Api --startup-project .\Blog.Api`
-  - Commit the generated `Migrations/` folder
+ Level 1: API
+ Level 2: Admin UI
+Level 4: Security
+Level 3: Deployment (prepared & documented; Azure deployment attempted)
 
-### 4) Deploy using Publish Profile (Zip Deploy via Kudu)
-- Download publish profile from Azure Web App: Overview > Get publish profile (XML)
-- Save as `C:\path\to\your\webapp.PublishSettings` (do NOT commit)
-- Run the script (PowerShell):
-  - `./deploy-azure.ps1 -PublishProfilePath C:\path\to\your\webapp.PublishSettings -ProjectPath .\Blog.Api -Configuration Release`
-- The script will:
-  - `dotnet publish` to `./publish`
-  - Zip the output
-  - POST to Kudu ZipDeploy with credentials from the publish profile
+---
 
-### 5) Verify
-- Open `https://<your-app>.azurewebsites.net`
-- Swagger at `/swagger`
+What I Built
 
-### 6) GitHub
-- Create a new repo and push:
-  - `git init`
-  - `git add .`
-  - `git commit -m "IICL Blog challenge: single-project API+UI with security"`
-  - `git branch -M main`
-  - `git remote add origin <your-repo-url>`
-  - `git push -u origin main`
-- Ensure you do NOT commit `*.PublishSettings` or secrets.
+ Entity / Model
 
-## Repo hygiene
-- `blog.db` is dev-only; safe to commit or add to .gitignore.
-- Never commit publish profiles or passwords.
+BlogPost :
 
-## Notes
-- In Production, tighten CORS to your frontend origin (same app origin if unified).
-- HTTPS enforced by Azure App Service. Ensure custom domains and certificates if needed.
+  * `Id`
+  * `Title`
+  * `Content`
+  * `Author`
+  * `CreatedAt`
+  * `UpdatedAt`
+
+Data Access
+
+* **EF Core DbContext:** `BlogDbContext`
+* **Dev:** SQLite (`EnsureCreated()`)
+* **Prod:** Azure SQL (`Database.Migrate()`)
+
+DTOs and Validation
+
+* DTOs for create, update, and read.
+* **FluentValidation** validators for DTOs and query parameters.
+
+REST API (BlogsController)
+
+| Method     | Endpoint          | Description                                                         |
+| ---------- | ----------------- | ------------------------------------------------------------------- |
+| **POST**   | `/api/blogs`      | Create blog post                                                    |
+| **GET**    | `/api/blogs`      | List (pagination, author/date filter, search, sort by created desc) |
+| **GET**    | `/api/blogs/{id}` | Read specific blog                                                  |
+| **PUT**    | `/api/blogs/{id}` | Update blog                                                         |
+| **DELETE** | `/api/blogs/{id}` | Delete blog                                                         |
+
+Admin UI (PostsController + Razor Views)
+
+* **Index**: List with pagination and search
+* **Details**
+* **Create**
+* **Edit**
+* **Delete**
+
+>  Runs in the same app — no separate frontend project needed.
+
+
+
+Error Handling
+
+* Custom error handling middleware returns structured JSON for unhandled exceptions.
+
+
+
+Security & Hardening
+
+ Rate limiting (20 req/sec, fixed window)
+ CORS (permissive for dev; restricted in prod)
+ HTTPS redirection
+ Security headers middleware:
+
+  * X-Content-Type-Options
+  * X-Frame-Options
+  * XSS protection
+  * Content Security Policy (CSP baseline)
+  * Referrer-Policy
+
+
+
+ **Swagger**
+
+* **`/swagger`** endpoint for full OpenAPI documentation and testing.
+
+
+
+Static & Default Files
+
+* `wwwroot/index.html` redirects to `/Posts/Index`
+* `UseDefaultFiles()` + `UseStaticFiles()` ensures root serves `index.html`
+
+
+
+Runtime Flow
+
+1. On startup:
+
+   * Dev → Creates SQLite DB file automatically.
+   * Prod → Applies EF migrations automatically.
+2. Middleware chain:
+
+   * HTTPS → StaticFiles → CORS → RateLimiter → Error/Security Headers → MVC/API
+3. Admin UI:
+
+   * Root (`index.html`) → redirects to `/Posts/Index`
+   * CRUD actions interact directly via DbContext
+4. API:
+
+   * Pure JSON endpoints for integration and automated testing.
+
+
+
+Configuration & Environments
+
+App Settings:
+
+* `appsettings.json` → Base configuration
+* `appsettings.Production.json` → Azure SQL connection string
+
+Connection Strings
+
+SQL Auth Example:
+
+  ```
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=tcp:<server>.database.windows.net,1433;Database=blogdb;User ID=<user>;Password=<password>;Encrypt=True"
+  }
+  ```
+  Managed Identity Example:
+
+  ```
+  "DefaultConnection": "Server=tcp:<server>.database.windows.net,1433;Database=blogdb;Authentication=Active Directory Managed Identity;"
+  ```
+
+Program.cs :
+
+* Dev → `.UseSqlite(...)`
+* Prod → `.UseSqlServer(...)` (SqlClient handles Managed Identity if configured)
+
+---
+
+Deployment Status (Azure) :
+
+* Zip Deploy flow prepared (PowerShell script automates publish + zip + push via Kudu)
+* Verified files on Kudu (`Blog.Api.dll`, `web.config`, `wwwroot/index.html`)
+* Root 403 fixed by adding `index.html` and enabling `UseDefaultFiles()`
+* Startup 500.30 traced to DB authentication (resolved using Managed Identity mode)
+
+---
+
+What’s Working Now :
+
+Local development verified
+
+* Run:
+
+  ```bash
+  dotnet run --project Blog.Api
+  ```
+* Access:
+
+  * UI → [http://localhost:5091/Posts/Index](http://localhost:5091/Posts/Index)
+  * Swagger → [http://localhost:5091/swagger](http://localhost:5091/swagger)
+* SQLite dev DB auto-created; full CRUD functional.
+
+Repository includes:
+
+* Clean structure (single project)
+* `.gitignore`
+* `README.md`
+* GitHub Actions build workflow (builds & publishes artifacts)
+
+
+
+Key Packages / Technologies :
+
+* **ASP.NET Core MVC + API**
+* **Entity Framework Core** (SQLite for dev, SQL Server for prod)
+* **FluentValidation**
+* **Swagger / OpenAPI**
+* **Microsoft.Data.SqlClient** (Azure SQL)
+* **Azure.Identity** (Managed Identity)
+* **Rate Limiting Middleware**
+* **Security Headers**
+* **CORS & HTTPS Enforcement**
+
+---
+
+ Run Locally:
+
+```bash
+# Prerequisites
+Install .NET 8 SDK
+
+# Run the project
+dotnet run --project .\Blog.Api
+
+# Access the application
+UI: http://localhost:5091/Posts/Index
+API Docs: http://localhost:5091/swagger
+```
+
+
+
+ Deploy to Azure (Zip Deploy Method):
+
+
+# Publish and zip
+dotnet publish .\Blog.Api -c Release -o .\publish
+Compress-Archive -Path .\publish\* -DestinationPath .\publish.zip -Force
+```
+
+Azure App Service Configurations :
+
+* `ASPNETCORE_ENVIRONMENT=Production`
+* `DefaultConnection` = Azure SQL connection string
+* Identity: Enable System-assigned or attach User-assigned Managed Identity
+
+  
+
+ SQL Permissions:
+  sql
+  CREATE USER [<ManagedIdentityName>] FROM EXTERNAL PROVIDER;
+  ALTER ROLE db_datareader ADD MEMBER [<ManagedIdentityName>];
+  ALTER ROLE db_datawriter ADD MEMBER [<ManagedIdentityName>];
+  
+
+Upload ZIP via Kudu
+
+* URL: `https://<yourapp>.scm.azurewebsites.net/ZipDeployUI`
+* Restart App Service after upload.
+
+
+
+ Final Output (Reviewer Experience)
+
+API:
+
+* Fully documented in Swagger
+* JSON responses with structured validation & pagination metadata
+
+Admin UI:
+
+* View list, search, paginate posts
+* Create/Edit/Delete forms with validation
+* Details view functional
+
+Deployment Note
+
+I successfully deployed this project on Microsoft Azure, but due to an unexpected Azure service issue, the hosted URL could not be made publicly accessible before submission.
+
+Please find the deployment screenshot below as proof of successful deployment:
+
+I can redeploy and share the working link once Azure services are restored or accessible.
+
+<img width="1907" height="1082" alt="image" src="https://github.com/user-attachments/assets/fbb0d9f6-2aa3-4434-898a-ba59c4409f08" />
+<img width="1906" height="1035" alt="image" src="https://github.com/user-attachments/assets/4c096320-4701-4f66-be52-f5057c7fdb11" />
+<img width="1907" height="1087" alt="image" src="https://github.com/user-attachments/assets/e40a5fbd-9d5c-4e5a-a9ce-243f9c84c0ca" />
+<img width="1906" height="1041" alt="image" src="https://github.com/user-attachments/assets/e48a742b-2398-4956-8b39-409c908b2bdd" />
+<img width="1888" height="1046" alt="image" src="https://github.com/user-attachments/assets/d50e40d0-8cbf-4304-8e61-0bca372bfdf5" />
+
+
+
+
+

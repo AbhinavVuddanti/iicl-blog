@@ -265,11 +265,7 @@ Please find the deployment screenshot below as proof of successful deployment:
 
 I can redeploy and share the working link once Azure services are restored or accessible.
 
-<img width="1907" height="1082" alt="image" src="https://github.com/user-attachments/assets/fbb0d9f6-2aa3-4434-898a-ba59c4409f08" />
-<img width="1906" height="1035" alt="image" src="https://github.com/user-attachments/assets/4c096320-4701-4f66-be52-f5057c7fdb11" />
-<img width="1907" height="1087" alt="image" src="https://github.com/user-attachments/assets/e40a5fbd-9d5c-4e5a-a9ce-243f9c84c0ca" />
-<img width="1906" height="1041" alt="image" src="https://github.com/user-attachments/assets/e48a742b-2398-4956-8b39-409c908b2bdd" />
-<img width="1888" height="1046" alt="image" src="https://github.com/user-attachments/assets/d50e40d0-8cbf-4304-8e61-0bca372bfdf5" />
+
 
 
 

@@ -7,6 +7,7 @@ using Blog.Api.Validators;
 using Azure.Core;
 using Azure.Identity;
 using Microsoft.Data.SqlClient;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,12 +39,31 @@ builder.Services.AddDbContext<BlogDbContext>((sp, opt) =>
     }
 });
 
-// CORS
+// CORS (dev = permissive; prod = configurable origins)
 const string CorsPolicy = "DefaultCors";
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(CorsPolicy, policy =>
-        policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+    {
+        var env = builder.Environment;
+        var cfg = builder.Configuration;
+        if (env.IsDevelopment())
+        {
+            policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+        }
+        else
+        {
+            var allowed = cfg.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+            if (allowed.Length > 0)
+            {
+                policy.WithOrigins(allowed).AllowAnyHeader().AllowAnyMethod();
+            }
+            else
+            {
+                policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+            }
+        }
+    });
 });
 
 // Rate limiting (simple fixed window)
@@ -80,6 +100,15 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+// Respect proxy headers (Render/Azure) and enable HSTS in Production
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
+if (app.Environment.IsProduction())
+{
+    app.UseHsts();
+}
 app.UseHttpsRedirection();
 app.UseDefaultFiles();
 app.UseStaticFiles();
@@ -97,5 +126,8 @@ app.MapControllerRoute(
 
 // Redirect root to Posts index (helps Azure default document behavior)
 app.MapGet("/", () => Results.Redirect("/Posts/Index"));
+
+// Health endpoint for uptime checks
+app.MapGet("/health", () => Results.Ok("OK"));
 
 app.Run();

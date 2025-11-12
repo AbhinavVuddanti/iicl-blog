@@ -4,9 +4,6 @@ using FluentValidation;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Blog.Api.Validators;
-using Azure.Core;
-using Azure.Identity;
-using Microsoft.Data.SqlClient;
 using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -49,19 +46,17 @@ builder.Services.AddCors(options =>
         var cfg = builder.Configuration;
         if (env.IsDevelopment())
         {
-            policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+            policy.AllowAnyOrigin()
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
         }
         else
         {
-            var allowed = cfg.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
-            if (allowed.Length > 0)
-            {
-                policy.WithOrigins(allowed).AllowAnyHeader().AllowAnyMethod();
-            }
-            else
-            {
-                policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
-            }
+            var allowed = cfg.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? 
+                new[] { "https://iicl-blog.onrender.com", "http://localhost:3000" };
+            policy.WithOrigins(allowed)
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
         }
     });
 });
@@ -105,14 +100,20 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
     ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
 });
+
 if (app.Environment.IsProduction())
 {
     app.UseHsts();
 }
+
 app.UseHttpsRedirection();
 app.UseDefaultFiles();
 app.UseStaticFiles();
+
+// CORS must be before other middleware
 app.UseCors(CorsPolicy);
+
+// Other middleware
 app.UseRateLimiter();
 app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseMiddleware<SecurityHeadersMiddleware>();
@@ -129,5 +130,8 @@ app.MapGet("/", () => Results.Redirect("/Posts/Index"));
 
 // Health endpoint for uptime checks
 app.MapGet("/health", () => Results.Ok("OK"));
+
+// API fallback for SPA routing
+app.MapFallbackToFile("index.html");
 
 app.Run();
